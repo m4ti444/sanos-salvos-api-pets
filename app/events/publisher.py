@@ -10,6 +10,10 @@ from typing import Optional
 
 from app.config import RABBITMQ_URL
 
+
+def rabbitmq_enabled():
+    return RABBITMQ_URL and RABBITMQ_URL.lower() not in {"disabled", "none", "off"}
+
 logger = logging.getLogger("events.publisher")
 
 EXCHANGE_NAME = "sanos_y_salvos"
@@ -25,6 +29,9 @@ class EventPublisher:
 
     async def connect(self):
         """Establish connection to RabbitMQ."""
+        if not rabbitmq_enabled():
+            logger.info("RabbitMQ disabled; skipping connection")
+            return
         try:
             self._connection = await aio_pika.connect_robust(RABBITMQ_URL)
             self._channel = await self._connection.channel()
